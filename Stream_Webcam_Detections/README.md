@@ -31,7 +31,7 @@ Stream_Webcam_Detections/
 ├── requirements-minimal.txt# Streaming-only dependencies
 ├── run.ps1                 # Windows setup and launcher
 ├── run.sh                  # Linux setup and launcher
-└── README.md               # This file
+└── README.md               # Current file
 ```
 
 ## Requirements
