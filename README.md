@@ -24,7 +24,7 @@ This repository contains small projects that I have created while learning AI de
 The repository contains several independent learning projects. Examples include:
 
 - **Stream_Webcam_Detections** – A webcam streaming and detection project for experimenting with real-time computer vision.
-- **Object Detection** – Experiments with identifying objects in images or video using AI models.
+- **Object_Detection** – Experiments with identifying objects in images or video using AI models.
 - **Other small AI model projects** – Additional experiments and practice programs created while learning different AI techniques.
 
 Each folder may have its own README file, requirements file, setup instructions, and Python scripts. Refer to the documentation inside an individual folder before running the specific project.
