@@ -1,0 +1,35 @@
+# Core Web Framework
+Flask==3.1.2
+waitress==3.0.2
+
+# Computer Vision (headless for Raspberry Pi compatibility)
+opencv-python-headless==4.10.0.84
+numpy>=1.21.0
+Pillow>=8.3.0
+
+# Person Detection - YOLOv5 (Raspberry Pi optimized)
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.3.0
+
+# Core dependencies for YOLO
+PyYAML>=5.3.1
+requests>=2.25.0
+pandas>=1.1.0
+psutil>=5.8.0
+tqdm>=4.60.0
+
+# Optional dependencies (for better performance)
+matplotlib>=3.3.0
+scipy>=1.7.0
+seaborn>=0.11.0
+
+# For Raspberry Pi CPU-only (uncomment on Pi for faster installation)
+# --index-url https://download.pytorch.org/whl/cpu
+# torch>=2.0.0+cpu
+# torchvision>=0.15.0+cpu
+
+# For NVIDIA GPU acceleration (uncomment if GPU available)
+# --index-url https://download.pytorch.org/whl/cu118
+# torch>=2.0.0+cu118
+# torchvision>=0.15.0+cu118

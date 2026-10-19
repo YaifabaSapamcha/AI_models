@@ -1,0 +1,18 @@
+# Minimal Requirements - for testing streaming without ML
+# Use this for basic camera streaming without person detection
+# Run with: DETECTION_ENABLED=false python app.py
+
+# Core Web Framework
+Flask==3.1.2
+waitress==3.0.2
+
+# Computer Vision (basic camera access only)
+opencv-python-headless==4.10.0.84
+numpy>=1.21.0
+
+# Basic dependencies
+requests>=2.25.0
+PyYAML>=5.3.1
+
+# Note: This will run the stream but person detection will be disabled
+# To enable detection, install the full requirements.txt or requirements-pi.txt

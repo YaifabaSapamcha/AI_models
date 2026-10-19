@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webcam Detection Stream</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div>
+        <p class="eyebrow">LOCAL CAMERA SERVER</p>
+        <h1>Webcam detection stream</h1>
+        <p class="subtitle">Lightweight MJPEG streaming tuned for CPU-only laptops.</p>
+      </div>
+      <div class="status-bar" aria-live="polite">
+        <div class="status-item"><span>Camera</span><strong id="camera-status">Waiting</strong></div>
+        <div class="status-item"><span>Detection</span><strong id="detection-status" class="{{ 'active' if detection_enabled else 'inactive' }}">{{ 'ON' if detection_enabled else 'OFF' }}</strong></div>
+        <div class="status-item"><span>Target</span><strong>{{ width }}×{{ height }} / {{ fps }} FPS</strong></div>
+      </div>
+    </header>
+
+    <section class="main-content">
+      <div class="video-container">
+        <img id="stream" src="{{ url_for('video_feed') }}" alt="Live webcam stream">
+        <div class="stream-overlay">Persons: <strong id="object-count">0</strong></div>
+      </div>
+
+      <aside class="controls-panel">
+        <section class="control-group">
+          <h2>Controls</h2>
+          <div class="button-group">
+            <button id="toggle-detection" class="btn btn-primary">{{ 'Disable' if detection_enabled else 'Enable' }} detection</button>
+            <button id="refresh-stream" class="btn btn-secondary">Refresh stream</button>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2>Live stats</h2>
+          <div class="stats-grid">
+            <div class="stat-item"><span>Stream FPS</span><strong id="actual-fps">—</strong></div>
+            <div class="stat-item"><span>Frames</span><strong id="frame-count">—</strong></div>
+            <div class="stat-item"><span>Uptime</span><strong id="uptime">—</strong></div>
+            <div class="stat-item"><span>Model</span><strong id="model-status">{{ 'Ready' if model_loaded else ('Off' if not detection_enabled else 'Loading') }}</strong></div>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2>Open stream in another app</h2>
+          <div class="links-grid">
+            <a href="{{ url_for('video_feed') }}" target="_blank" class="link-btn">Browser MJPEG</a>
+            <a href="{{ url_for('api_persons') }}" target="_blank" class="link-btn">Detection API</a>
+            <a href="{{ url_for('health') }}" target="_blank" class="link-btn">Health check</a>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <footer class="footer">Run this on the laptop, then open <code>http://127.0.0.1:8080/</code> in Chrome or Edge. Use the laptop's local IP for another device on the same Wi-Fi.</footer>
+  </main>
+
+  <script>
+    const stream = document.getElementById('stream');
+    const status = document.getElementById('camera-status');
+    const detectionStatus = document.getElementById('detection-status');
+    const toggle = document.getElementById('toggle-detection');
+
+    function refreshStream() {
+      const base = '{{ url_for('video_feed') }}';
+      stream.src = `${base}?t=${Date.now()}`;
+    }
+
+    document.getElementById('refresh-stream').addEventListener('click', refreshStream);
+    stream.addEventListener('load', () => { status.textContent = 'Streaming'; status.className = 'active'; });
+    stream.addEventListener('error', () => { status.textContent = 'Retrying'; status.className = 'warning'; setTimeout(refreshStream, 1500); });
+
+    toggle.addEventListener('click', async () => {
+      const response = await fetch('{{ url_for('toggle_detection') }}', { method: 'POST' });
+      const data = await response.json();
+      const enabled = data.detection_enabled;
+      toggle.textContent = `${enabled ? 'Disable' : 'Enable'} detection`;
+      detectionStatus.textContent = enabled ? 'ON' : 'OFF';
+      detectionStatus.className = enabled ? 'active' : 'inactive';
+      document.getElementById('model-status').textContent = enabled ? 'Loading' : 'Off';
+    });
+
+    async function updateStats() {
+      try {
+        const response = await fetch('{{ url_for('api_stats') }}', { cache: 'no-store' });
+        const data = await response.json();
+        document.getElementById('actual-fps').textContent = Number(data.fps || 0).toFixed(1);
+        document.getElementById('frame-count').textContent = Number(data.frame_count || 0).toLocaleString();
+        document.getElementById('uptime').textContent = `${Math.floor(data.uptime / 60)}m ${Math.floor(data.uptime % 60)}s`;
+      } catch (_) { status.textContent = 'Offline'; }
+    }
+
+    async function updateDetections() {
+      try {
+        const response = await fetch('{{ url_for('api_persons') }}', { cache: 'no-store' });
+        const data = await response.json();
+        document.getElementById('object-count').textContent = data.person_count || 0;
+        const health = await fetch('{{ url_for('health') }}', { cache: 'no-store' });
+        const healthData = await health.json();
+        document.getElementById('model-status').textContent = healthData.detection_status === 'ready' ? 'Ready' : healthData.detection_status;
+        if (healthData.camera) { status.textContent = 'Streaming'; status.className = 'active'; }
+      } catch (_) {}
+    }
+
+    updateStats(); updateDetections();
+    setInterval(updateStats, 2000);
+    setInterval(updateDetections, 2000);
+  </script>
+</body>
+</html>
