@@ -1,390 +1,404 @@
-# 👁️ Person Detection Stream
+# Webcam Detection Stream
 
-A **Raspberry Pi optimized** real-time webcam streaming application with **YOLOv5 person detection**. Stream directly in your browser or VLC player - no templates, just pure video with person detection overlay.
+A lightweight local webcam streaming application with optional real-time person detection. It captures video with OpenCV, serves an MJPEG stream through Flask, and can use a YOLOv5 nano model to detect people.
 
-## ✨ Features
+The application is designed to work well on CPU-only laptops such as the **Dell Inspiron 15 3511**, as well as Linux systems and Raspberry Pi devices.
 
-- 👥 **Person detection ONLY** - focused and efficient
-- 🍓 **Raspberry Pi optimized** - runs great on Pi Zero to Pi 4
-- 📹 **Direct video stream** at root path `/` - no web UI needed
-- 🎬 **VLC compatible** MJPEG streaming
-- 📱 **Access from any device** on your network
-- ⚡ **Performance optimized** - lower CPU usage, configurable quality
-- 🎯 **Person counting** - real-time count overlay
-- 📡 **REST API** for person detection data
-- 🏠 **Local network only** - works offline, privacy-focused
+## Features
 
-## 🚀 Quick Start
+- Live webcam streaming in Chrome, Edge, Firefox, or VLC
+- Optional person-only detection using YOLOv5 nano
+- Responsive browser dashboard
+- Shared camera worker for multiple viewers
+- Camera retry handling when the webcam is unavailable or busy
+- Live FPS, frame count, uptime, camera status, and detection status
+- REST API for detection data, statistics, and health checks
+- Configurable camera index, resolution, FPS, JPEG quality, and detection interval
+- Local-network operation without an external streaming service
 
-### Raspberry Pi (Recommended)
-```bash
-# Clone the project
-git clone <repository-url>
-cd webcam-object-detection-stream
+## Project structure
 
-# Run the Pi-optimized setup
-chmod +x setup-pi.sh
-./setup-pi.sh
-
-# Start streaming
-./run.sh
+```text
+Stream_Webcam_Detections/
+├── app.py                  # Flask application and camera worker
+├── templates/
+│   └── index.html          # Browser dashboard
+├── static/
+│   └── style.css           # Dashboard styling
+├── yolov5n.pt              # Local YOLOv5 nano model
+├── .env.example            # Configuration template
+├── requirements.txt        # Full dependencies with detection support
+├── requirements-minimal.txt# Streaming-only dependencies
+├── run.ps1                 # Windows setup and launcher
+├── run.sh                  # Linux setup and launcher
+└── README.md               # This file
 ```
 
-> 📖 **For complete Raspberry Pi guide, see:** [README-PI.md](README-PI.md)
+## Requirements
 
-### Other Systems (Windows/macOS/Linux)
-```bash
-# Clone the project
-git clone <repository-url>
-cd webcam-object-detection-stream
+### Hardware
 
-# Choose installation method:
+- Built-in or USB webcam
+- At least 4 GB RAM recommended for person detection
+- Modern CPU
+- Windows 10/11, Linux, macOS, or Raspberry Pi OS
 
-# Option 1: Full installation (recommended)
-pip install -r requirements.txt
+### Software
 
-# Option 2: Minimal installation (streaming only, no detection)
-pip install -r requirements-minimal.txt
+- Python 3.9 or newer recommended
+- Internet connection for the first dependency installation
+- A modern browser for viewing the dashboard
 
-# Start streaming
-python app.py
+## Quick start on Windows
+
+This setup was build for my Dell Inspiron 15 3511. But it should work on similar laptops or pc.
+
+Open PowerShell in the project directory:
+
+```powershell
+cd "D:\path\to\Stream_Webcam_Detections"
 ```
 
-### Dell Inspiron 15 3511
-
-For the Windows laptop profile, use the conservative 640×480 / 10 FPS settings and the shared camera worker:
+Create the configuration file:
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+Allow local script execution for the current PowerShell session:
+
+```powershell
 Set-ExecutionPolicy -Scope Process Bypass
+```
+
+Start the application:
+
+```powershell
 .\run.ps1
 ```
 
-Open `http://127.0.0.1:8080/`. Detection is off by default so the stream starts smoothly on the integrated CPU; enable it from the dashboard when needed. See [README-DELL.md](README-DELL.md) for troubleshooting and network access.
+Open the dashboard:
 
-### Access the Stream
-
-Once running, access from any device on the same network:
-
-- **📹 Direct Stream:** `http://<pi-ip>:8080/` (opens directly in browser)
-- **🎬 VLC Stream:** `http://<pi-ip>:8080/stream`  
-- **👥 Person API:** `http://<pi-ip>:8080/api/persons`
-- **❤️ Health Check:** `http://<pi-ip>:8080/healthz`
-
-> **Find Pi IP:** Run `hostname -I` on Raspberry Pi
-
-## 📦 Requirements Files
-
-Choose the right requirements file for your setup:
-
-### 📜 **requirements.txt** (Standard)
-- **For:** Desktop/laptop, full features
-- **Includes:** Full PyTorch, all dependencies
-- **Size:** ~2GB download
-- **Features:** Person detection, all optimizations
-
-### 🍓 **requirements-pi.txt** (Raspberry Pi)
-- **For:** Raspberry Pi (all models)
-- **Includes:** CPU-only PyTorch, Pi optimizations
-- **Size:** ~500MB download (much smaller)
-- **Features:** Person detection optimized for Pi
-- **Auto-used:** by `setup-pi.sh` and `run.sh` on Pi
-
-### ⚡ **requirements-minimal.txt** (Testing)
-- **For:** Quick testing, streaming only
-- **Includes:** Basic Flask + OpenCV
-- **Size:** ~50MB download
-- **Features:** Camera streaming only (no detection)
-- **Use case:** Test camera before installing ML dependencies
-
-```bash
-# Examples:
-pip install -r requirements.txt         # Full installation
-pip install -r requirements-pi.txt      # Pi optimized
-pip install -r requirements-minimal.txt # Minimal streaming
+```text
+http://127.0.0.1:8080/
 ```
 
-## 📋 System Requirements
+The Windows launcher creates a virtual environment, installs dependencies, loads `.env`, and starts the application.
 
-### System Requirements
-- **Python 3.8+**
-- **Webcam** (built-in or USB)
-- **4GB+ RAM** (recommended for YOLO models)
-- **Modern CPU** (GPU optional but recommended for better performance)
+### Manual Windows setup
 
-### Supported Platforms
-- ✅ Windows 10/11
-- ✅ macOS (Intel & Apple Silicon)
-- ✅ Linux (Ubuntu, Debian, CentOS, etc.)
-- ✅ Raspberry Pi OS (4GB+ model recommended)
+If you prefer to run each step manually:
 
-## ⚙️ Configuration
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
+.venv\Scripts\python.exe app.py
+```
 
-Copy `.env.example` to `.env` and customize:
+## Quick start on Linux or macOS
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 cp .env.example .env
+python app.py
 ```
 
-### Key Settings
-
-```env
-# Server Configuration
-HOST=0.0.0.0          # Listen on all interfaces
-PORT=8080              # Port number
-
-# Camera Settings
-CAMERA_INDEX=0         # Webcam index (0 = default)
-WIDTH=1280             # Video width
-HEIGHT=720             # Video height  
-FPS=15                 # Target frames per second
-
-# Object Detection
-DETECTION_ENABLED=true # Enable/disable detection
-DETECTION_MODEL=yolov5s # Model size: yolov5n, yolov5s, yolov5m, yolov5l, yolov5x
-
-# Performance
-JPEG_QUALITY=80        # Stream quality (1-100)
-CONFIDENCE_THRESHOLD=0.5 # Detection confidence threshold
-```
-
-### Model Performance Guide
-
-| Model | Speed | Accuracy | RAM Usage | Best For |
-|-------|--------|----------|-----------|----------|
-| `yolov5n` | ⚡⚡⚡⚡ | ⭐⭐ | ~1GB | Raspberry Pi, Low-end |
-| `yolov5s` | ⚡⚡⚡ | ⭐⭐⭐ | ~2GB | Default, Balanced |
-| `yolov5m` | ⚡⚡ | ⭐⭐⭐⭐ | ~4GB | Better accuracy |
-| `yolov5l` | ⚡ | ⭐⭐⭐⭐⭐ | ~6GB | High accuracy |
-| `yolov5x` | ⚡ | ⭐⭐⭐⭐⭐ | ~8GB | Maximum accuracy |
-
-## 🎮 Usage
-
-### Web Interface Features
-
-1. **Live Video Stream** - Real-time webcam feed with detection overlays
-2. **Detection Toggle** - Enable/disable object detection on-the-fly
-3. **Live Statistics** - FPS, object count, uptime tracking
-4. **Stream Controls** - Refresh stream, view direct feeds
-5. **Detection List** - Real-time list of detected objects with confidence scores
-
-### VLC Access
-
-1. Open VLC Media Player
-2. Go to `Media` → `Open Network Stream`
-3. Enter: `http://<your-ip>:8080/stream.mjpg`
-4. Click Play
-
-### API Endpoints
-
-- `GET /` - Web interface
-- `GET /video_feed` - MJPEG stream for browsers
-- `GET /stream.mjpg` - MJPEG stream for VLC
-- `GET /api/detections` - Current detections as JSON
-- `GET /api/stats` - Performance statistics
-- `POST /api/toggle_detection` - Toggle detection on/off
-- `GET /healthz` - Health check
-- `GET /about` - Application information
-
-### API Response Example
-
-```json
-{
-  "detections": [
-    {
-      "class": "person",
-      "confidence": 0.87,
-      "bbox": [245, 123, 456, 678]
-    },
-    {
-      "class": "laptop", 
-      "confidence": 0.92,
-      "bbox": [100, 200, 300, 400]
-    }
-  ],
-  "stats": {
-    "fps": 12.5,
-    "detection_count": 2,
-    "frame_count": 1547
-  },
-  "timestamp": 1674123456.789
-}
-```
-
-## 🔧 Installation Details
-
-### Manual Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd webcam-object-detection-stream
-   ```
-
-2. **Create virtual environment**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/macOS
-   # or
-   .venv\Scripts\activate     # Windows
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure settings (optional)**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your preferred settings
-   ```
-
-5. **Run the application**
-   ```bash
-   python app.py
-   ```
-
-### Raspberry Pi Specific Setup
+Alternatively, use the launcher on Linux:
 
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
-# Install Python dependencies
-sudo apt install -y python3-pip python3-venv python3-dev
-
-# Install camera utilities (optional)
-sudo apt install -y v4l-utils
-
-# Check camera
-v4l2-ctl --list-devices
-
-# Clone and setup
-git clone <repository-url>
-cd webcam-object-detection-stream
 chmod +x run.sh
 ./run.sh
 ```
 
-### GPU Acceleration (Optional)
+Open:
 
-For NVIDIA GPUs, install CUDA-enabled PyTorch:
-
-```bash
-# Replace CPU version in requirements.txt with:
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+```text
+http://127.0.0.1:8080/
 ```
 
-## 🌐 Network Access
+## Streaming-only installation
 
-### Same Network Access
-- Ensure your device and client are on the same Wi-Fi/router
-- Use the device's local IP address (e.g., `192.168.1.100:8080`)
-- No internet connection required
+If you only need webcam streaming and do not need person detection, install the smaller dependency set:
 
-### Remote Access (Advanced)
-For access from outside your network, consider:
+### Windows
 
-1. **VPN** (Recommended) - Use Tailscale, WireGuard, or OpenVPN
-2. **Reverse Proxy** - Use Caddy/Nginx with authentication
-3. **Port Forwarding** - Configure router (not recommended without auth)
-
-⚠️ **Security Warning:** This application has no built-in authentication. Do not expose directly to the internet without proper security measures.
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Camera not detected**
-```bash
-# Linux: Check available cameras
-ls -l /dev/video*
-v4l2-ctl --list-devices
-
-# Windows: Try different CAMERA_INDEX values (0, 1, 2...)
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-minimal.txt
+$env:DETECTION_ENABLED="false"
+.venv\Scripts\python.exe app.py
 ```
 
-**Model loading fails**
-- Check internet connection (first run downloads model)
-- Ensure sufficient RAM for chosen model
-- Try smaller model (yolov5n) for limited hardware
+### Linux or macOS
 
-**Poor performance**
-- Lower resolution in `.env` (e.g., 640x480)
-- Reduce FPS target
-- Use smaller YOLO model
-- Disable detection temporarily
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-minimal.txt
+DETECTION_ENABLED=false python app.py
+```
 
-**Stream not loading in browser**
-- Check firewall settings
-- Try different port in `.env`
-- Refresh browser/clear cache
-- Check application logs
+Streaming-only mode is recommended when the main priority is the smoothest possible video stream on a low-power CPU.
 
-**VLC can't connect**
-- Ensure VLC network caching is enabled
-- Try direct IP instead of hostname
-- Check network firewall rules
+## Configuration
 
-### Performance Optimization
+Copy `.env.example` to `.env` and edit the values as needed:
 
-**For Raspberry Pi:**
 ```env
-# Lighter settings for Pi
+HOST=0.0.0.0
+PORT=8080
+
+CAMERA_INDEX=0
 WIDTH=640
 HEIGHT=480
 FPS=10
+JPEG_QUALITY=70
+
+DETECTION_ENABLED=false
 DETECTION_MODEL=yolov5n
-JPEG_QUALITY=60
+CONFIDENCE_THRESHOLD=0.50
+DETECTION_SIZE=320
+DETECTION_INTERVAL=3
+TORCH_THREADS=2
 ```
 
-**For desktop/server:**
+### Configuration reference
+
+| Variable | Default | Description |
+|---|---:|---|
+| `HOST` | `0.0.0.0` | Network interface used by the server |
+| `PORT` | `8080` | HTTP port |
+| `CAMERA_INDEX` | `0` | Webcam index; try `1` if the default camera is not found |
+| `WIDTH` | `640` | Stream width in pixels |
+| `HEIGHT` | `480` | Stream height in pixels |
+| `FPS` | `10` | Target capture and stream frame rate |
+| `JPEG_QUALITY` | `70` | JPEG quality from 30 to 95 |
+| `DETECTION_ENABLED` | `false` | Enable or disable person detection at startup |
+| `DETECTION_MODEL` | `yolov5n` | Detection model name or fallback model source |
+| `CONFIDENCE_THRESHOLD` | `0.50` | Minimum detection confidence |
+| `DETECTION_SIZE` | `320` | YOLO inference size; lower values use less CPU |
+| `DETECTION_INTERVAL` | `3` | Run detection every Nth frame |
+| `TORCH_THREADS` | `2` | CPU threads reserved for PyTorch inference |
+
+## Dell Inspiron 15 3511 recommended settings
+
+For smooth webcam streaming:
+
 ```env
-# Higher quality settings
-WIDTH=1920
-HEIGHT=1080
-FPS=30
-DETECTION_MODEL=yolov5m
-JPEG_QUALITY=90
+WIDTH=640
+HEIGHT=480
+FPS=10
+JPEG_QUALITY=70
+DETECTION_ENABLED=false
 ```
 
-## 📝 Detected Object Classes
+For optional detection while limiting CPU usage:
 
-YOLOv5 can detect 80 different object classes including:
+```env
+WIDTH=640
+HEIGHT=480
+FPS=10
+DETECTION_ENABLED=true
+DETECTION_SIZE=320
+DETECTION_INTERVAL=3
+TORCH_THREADS=2
+```
 
-**People & Animals:** person, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe
+If detection is too slow, increase `DETECTION_INTERVAL` to `5` or `8`, reduce `DETECTION_SIZE` to `256`, or turn detection off.
 
-**Vehicles:** bicycle, car, motorcycle, airplane, bus, train, truck, boat
+If the stream itself is slow, use:
 
-**Indoor Objects:** chair, sofa, bed, dining table, toilet, tv, laptop, mouse, remote, keyboard, cell phone, microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors, teddy bear, hair drier, toothbrush
+```env
+WIDTH=480
+HEIGHT=360
+FPS=8
+JPEG_QUALITY=60
+DETECTION_ENABLED=false
+```
 
-**Sports:** frisbee, skis, snowboard, sports ball, kite, baseball bat, baseball glove, skateboard, surfboard, tennis racket
+## Accessing the stream
 
-And many more! See the full list in the YOLO documentation.
+### Browser dashboard
 
-## 🤝 Contributing
+```text
+http://127.0.0.1:8080/
+```
 
-Contributions are welcome! Please feel free to:
+### MJPEG stream
 
-- Report bugs or issues
-- Suggest new features
-- Submit pull requests
-- Improve documentation
+```text
+http://127.0.0.1:8080/stream
+```
 
-## 📄 License
+Additional stream aliases:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```text
+http://127.0.0.1:8080/video_feed
+http://127.0.0.1:8080/video
+http://127.0.0.1:8080/stream.mjpg
+```
 
-## 🙏 Acknowledgments
+### VLC
 
-- **YOLOv5** by Ultralytics for object detection
-- **OpenCV** for computer vision processing  
-- **Flask** for the web framework
-- **PyTorch** for deep learning inference
+1. Open VLC Media Player.
+2. Select **Media → Open Network Stream**.
+3. Enter:
 
----
+```text
+http://127.0.0.1:8080/stream.mjpg
+```
 
-**Made with ❤️ for the maker community**
+4. Select **Play**.
 
-*Perfect for security monitoring, educational projects, IoT applications, and more!*
+## API endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/` | Browser dashboard |
+| `GET` | `/stream` | MJPEG stream |
+| `GET` | `/api/persons` | Current person detections |
+| `GET` | `/api/detections` | Alias for the detection API |
+| `GET` | `/api/stats` | FPS, uptime, and frame statistics |
+| `POST` | `/api/toggle_detection` | Enable or disable detection |
+| `GET` | `/healthz` | Camera and model health information |
+| `GET` | `/info` | Application information |
+
+Example:
+
+```text
+http://127.0.0.1:8080/healthz
+```
+
+Example detection response:
+
+```json
+{
+  "persons": [
+    {
+      "class": "person",
+      "confidence": 0.87,
+      "bbox": [245, 123, 456, 678],
+      "id": 1
+    }
+  ],
+  "person_count": 1,
+  "timestamp": 1730000000.0
+}
+```
+
+## Access from another device on the same Wi-Fi
+
+1. Start the server on the laptop.
+2. In PowerShell, find the laptop's IP address:
+
+```powershell
+ipconfig
+```
+
+3. Find the IPv4 address of the active Wi-Fi adapter, for example `192.168.1.25`.
+4. Allow Python through Windows Firewall when Windows asks. Choose **Private networks** only.
+5. From another device on the same network, open:
+
+```text
+http://192.168.1.25:8080/
+```
+
+Do not expose this application directly to the public internet. It does not include authentication.
+
+## Troubleshooting
+
+### PowerShell reports errors near `from app import create_app`
+
+This means PowerShell is trying to interpret Python code as PowerShell code. Use the corrected `run.ps1` from this project and start it with:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\run.ps1
+```
+
+The launcher should not contain an embedded `python -c @" ... "@` block.
+
+### Camera not found
+
+Try these steps:
+
+1. Close Camera, Teams, Zoom, OBS, or other programs using the webcam.
+2. Try another camera index in `.env`:
+
+```env
+CAMERA_INDEX=1
+```
+
+3. Restart the application.
+4. Check Windows **Settings → Privacy & security → Camera** and enable camera access for desktop applications.
+
+### Stream is slow
+
+Lower the workload:
+
+```env
+WIDTH=480
+HEIGHT=360
+FPS=8
+JPEG_QUALITY=60
+DETECTION_ENABLED=false
+```
+
+If detection is enabled, increase `DETECTION_INTERVAL` or reduce `DETECTION_SIZE`.
+
+### Detection model does not load
+
+The webcam stream should still work without the model. Check that the full dependencies are installed:
+
+```powershell
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+For streaming without detection, set:
+
+```env
+DETECTION_ENABLED=false
+```
+
+### Port 8080 is already in use
+
+Change the port in `.env`:
+
+```env
+PORT=8090
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8090/
+```
+
+### Browser shows a blank stream
+
+Check the health endpoint:
+
+```text
+http://127.0.0.1:8080/healthz
+```
+
+Also try the direct stream:
+
+```text
+http://127.0.0.1:8080/stream
+```
+
+## Privacy and security
+
+The camera feed is processed locally by default. The application does not upload frames to an external service.
+
+However, the server has no built-in authentication. Use it only on a trusted local network, or place it behind a VPN and authenticated reverse proxy before exposing it to other networks.
+
+## License
+
+This project is distributed under the MIT License. See [LICENSE](LICENSE).
